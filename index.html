@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>烽火リレー 221BC — Beacon Relay</title>
+<meta name="description" content="万里の長城の烽火台を守り、狼煙リレーで敵襲を伝えよ。紀元前221年、秦の始皇帝時代の通信システムを体験する。">
+<meta property="og:title" content="烽火リレー 221BC — Beacon Relay">
+<meta property="og:description" content="万里の長城の烽火台をタップして狼煙リレーを完成させよう！">
+<meta property="og:type" content="website">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;color:#e8d5b5}
+body{background:#050d1a;position:relative}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+
+/* ── Scene ── */
+#scene{position:absolute;top:0;left:0;right:0;height:54vh;overflow:hidden;background:linear-gradient(180deg,#050d1a 0%,#0a1628 25%,#122040 55%,#1a2d50 100%)}
+
+.moon{position:absolute;top:7%;right:14%;width:36px;height:36px;background:radial-gradient(circle at 35% 35%,#ffeebb,#ddcc88 60%,#bb9944);border-radius:50%;box-shadow:0 0 25px rgba(255,238,187,.25),0 0 60px rgba(255,238,187,.1)}
+
+.mountains{position:absolute;bottom:32%;left:0;right:0;height:28%}
+.mtn{position:absolute;bottom:0;width:100%;height:100%}
+.mtn-1{background:#0c1a2e;clip-path:polygon(0 100%,0 55%,12% 28%,25% 50%,38% 18%,52% 42%,65% 12%,78% 38%,90% 22%,100% 45%,100% 100%)}
+.mtn-2{background:#0f1e33;clip-path:polygon(0 100%,5% 62%,18% 40%,30% 58%,42% 30%,55% 52%,68% 25%,82% 48%,95% 35%,100% 55%,100% 100%);opacity:.65;transform:translateY(8%)}
+
+.steppe{position:absolute;bottom:20%;left:0;right:0;height:16%;background:linear-gradient(180deg,#151f12 0%,#1c2a18 60%,#222e1e 100%)}
+.steppe-grass{position:absolute;bottom:0;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#2a3a22 0,#2a3a22 6px,#222e1e 6px,#222e1e 10px)}
+
+.wall-area{position:absolute;bottom:10%;left:0;right:0;height:10%}
+.wall-body{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(180deg,#8a7a65 0%,#6b5d4e 60%,#4a3f35 100%);border-top:2px solid #a09080}
+.wall-path{position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,#9a8a72 0%,#8a7a65 100%);border-top:1px solid #b0a090}
+.wall-tex{position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(0,0,0,.08) 28px,rgba(0,0,0,.08) 30px)}
+
+.ground{position:absolute;bottom:0;left:0;right:0;height:10%;background:linear-gradient(180deg,#1e1c18 0%,#151310 100%)}
+
+/* ── Towers ── */
+.tower-wrap{position:absolute;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tower-wrap:active .tw-base{filter:brightness(1.3)}
+.tw-base{width:34px;position:relative;transition:filter .1s}
+.tw-body{width:34px;height:44px;background:linear-gradient(180deg,#9a8a72,#7a6a55 50%,#5a4a38);border:1px solid #4a3a28;border-radius:2px 2px 0 0}
+.tw-plat{position:absolute;top:-5px;left:-3px;right:-3px;height:5px;background:#8a7a62;border:1px solid #5a4a38;border-bottom:none;border-radius:2px 2px 0 0}
+.tw-merlons{position:absolute;top:-12px;left:-1px;right:-1px;display:flex;justify-content:space-between}
+.tw-merlons span{width:5px;height:8px;background:#7a6a52;border:1px solid #4a3a28;border-radius:1px 1px 0 0}
+
+/* Fire */
+.fire-wrap{position:absolute;top:-38px;left:50%;transform:translateX(-50%);width:28px;height:28px;opacity:0;transition:opacity .4s;pointer-events:none}
+.fire-wrap.lit{opacity:1}
+.fl{position:absolute;bottom:0;left:50%;transform:translateX(-50%);border-radius:50% 50% 45% 45%/60% 60% 40% 40%}
+.fl-1{width:14px;height:20px;background:radial-gradient(ellipse at 50% 80%,#ffdd44,#ff8800 45%,#cc3300 75%,transparent);animation:fk1 .28s ease-in-out infinite alternate}
+.fl-2{width:10px;height:14px;background:radial-gradient(ellipse at 50% 80%,#ffee66,#ffaa22 55%,transparent);animation:fk2 .22s ease-in-out infinite alternate;bottom:2px}
+.fl-3{width:6px;height:9px;background:radial-gradient(ellipse at 50% 80%,#fff8cc,#ffcc44 65%,transparent);animation:fk3 .18s ease-in-out infinite alternate;bottom:3px}
+@keyframes fk1{from{transform:translateX(-50%) scaleX(.88) scaleY(.94)}to{transform:translateX(-50%) scaleX(1.12) scaleY(1.06)}}
+@keyframes fk2{from{transform:translateX(-50%) scaleX(1.1)}to{transform:translateX(-50%) scaleX(.84)}}
+@keyframes fk3{from{transform:translateX(-50%) scaleX(.84) scaleY(.88)}to{transform:translateX(-50%) scaleX(1.16) scaleY(1.12)}}
+
+.fire-glow{position:absolute;top:-48px;left:50%;transform:translateX(-50%);width:56px;height:56px;background:radial-gradient(circle,rgba(255,140,40,.22) 0%,transparent 70%);opacity:0;transition:opacity .5s;pointer-events:none}
+.fire-glow.lit{opacity:1}
+
+/* Tower indicators */
+.tw-alert{position:absolute;top:-50px;left:50%;transform:translateX(-50%);font-size:22px;opacity:0;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,60,60,.6))}
+.tw-alert.on{opacity:1;animation:apulse .5s ease-in-out infinite}
+@keyframes apulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.7}50%{transform:translateX(-50%) scale(1.25);opacity:1}}
+
+.tw-relay{position:absolute;top:-50px;left:50%;transform:translateX(-50%);font-size:18px;opacity:0;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,170,0,.5))}
+.tw-relay.on{opacity:1;animation:rpulse .45s ease-in-out infinite}
+@keyframes rpulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.2)}}
+
+/* Tower number label */
+.tw-num{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:#5a5040;font-weight:700;letter-spacing:1px}
+
+/* ── Enemy wave ── */
+#enemy-wave{position:absolute;left:8%;right:8%;height:18px;border-radius:0 0 40% 40%;opacity:0;z-index:5;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:4px;transition:opacity .4s}
+#enemy-wave.on{opacity:1}
+.enemy-dust{position:absolute;bottom:-4px;left:0;right:0;height:6px;background:linear-gradient(180deg,rgba(80,60,30,.5),transparent);border-radius:0 0 50% 50%}
+.ef{width:5px;height:10px;background:#1a0e08;border-radius:2px 2px 0 0;position:relative;opacity:.85}
+.ef::after{content:'';position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#1a0e08;border-radius:50%}
+.ef.horse{width:8px;height:8px;border-radius:3px;background:#2a1510}
+.ef.horse::after{top:-2px;width:3px;height:3px}
+.ef.horse::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:4px;height:8px;background:#1a0e08;border-radius:2px 2px 0 0}
+
+/* ── Timer ── */
+#timer-wrap{position:absolute;top:0;left:0;right:0;height:4px;z-index:50}
+#timer-fill{height:100%;width:100%;border-radius:0 2px 2px 0;transition:width .08s linear,background .3s}
+
+/* ── HUD ── */
+.hud{position:absolute;top:8px;left:0;right:0;z-index:30;display:flex;justify-content:space-between;padding:0 12px;font-size:11px;font-weight:600;letter-spacing:.5px;color:#6a7a8a;text-shadow:0 1px 3px rgba(0,0,0,.8);opacity:0;transition:opacity .3s}
+.hud.on{opacity:1}
+.hud .val{color:#e8d5b5}
+
+/* ── UI Panel ── */
+#ui{position:absolute;bottom:0;left:0;right:0;height:46vh;background:linear-gradient(180deg,rgba(10,18,32,.6) 0%,rgba(6,12,22,.94) 35%);padding:10px 14px 16px;display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,180,80,.12);z-index:20}
+
+#log{flex:1;background:rgba(0,0,0,.28);border:1px solid rgba(255,180,80,.1);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7;overflow-y:auto;color:#b8a880;min-height:40px;scroll-behavior:smooth}
+#log .hi{color:#ffcc44;font-weight:600}
+#log .danger{color:#ff6644}
+#log .ok{color:#55cc66}
+#log .dim{color:#667}
+
+.action-btn{width:100%;padding:14px;background:linear-gradient(135deg,#b85500,#e07000);color:#fff;font-size:16px;font-weight:700;border-radius:10px;letter-spacing:1px;transition:transform .08s,opacity .2s;box-shadow:0 4px 16px rgba(200,100,0,.25)}
+.action-btn:active{transform:scale(.96)}
+.action-btn:disabled{opacity:.35;pointer-events:none}
+
+/* ── Overlays ── */
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,8,16,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:24px;text-align:center;transition:opacity .4s;overflow-y:auto}
+.ov.hide{opacity:0;pointer-events:none}
+.ov h1{font-size:26px;font-weight:800;letter-spacing:1.5px;margin-bottom:6px;background:linear-gradient(135deg,#ffcc44,#ff8800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ov h2{font-size:13px;color:#7888a0;font-weight:400;margin-bottom:20px;line-height:1.6}
+.ov .badge{display:inline-block;background:#cc6600;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;margin-bottom:10px;letter-spacing:1px}
+.ov .fact{background:rgba(255,180,80,.06);border:1px solid rgba(255,180,80,.12);border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.8;color:#b8a880;margin:14px 0;max-width:340px;text-align:left}
+.ov .fact b{color:#e8c060;font-weight:600}
+.ov .big-score{font-size:44px;font-weight:800;color:#ffcc44;text-shadow:0 0 18px rgba(255,200,50,.25);margin:6px 0}
+
+/* Tap ripple */
+.ripple{position:absolute;width:36px;height:36px;border:2px solid rgba(255,180,80,.5);border-radius:50%;pointer-events:none;animation:rip .45s ease-out forwards;z-index:15}
+@keyframes rip{from{transform:translate(-50%,-50%) scale(.5);opacity:1}to{transform:translate(-50%,-50%) scale(2.2);opacity:0}}
+
+/* Success flash */
+.s-flash{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,200,50,.12);pointer-events:none;z-index:90;animation:sf .35s ease-out forwards}
+@keyframes sf{from{opacity:1}to{opacity:0}}
+
+/* Fail flash */
+.f-flash{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,40,20,.12);pointer-events:none;z-index:90;animation:sf .4s ease-out forwards}
+
+/* Lang toggle */
+.lang-tg{position:fixed;top:8px;right:8px;z-index:200;display:flex;gap:2px;background:rgba(15,25,40,.85);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:2px}
+.lang-tg button{padding:3px 7px;font-size:10px;font-weight:600;color:#556;border-radius:4px;transition:all .15s}
+.lang-tg button.act{background:#cc6600;color:#fff}
+
+/* Wind overlay on tower */
+.wind-icon{position:absolute;top:-32px;left:50%;transform:translateX(-50%);font-size:16px;opacity:0;pointer-events:none;animation:none}
+.wind-icon.on{opacity:1;animation:windBlow .6s ease-in-out infinite alternate}
+@keyframes windBlow{from{transform:translateX(-50%) translateX(-4px)}to{transform:translateX(-50%) translateX(4px)}}
+
+/* Saboteur */
+.saboteur{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:14px;opacity:0;pointer-events:none;z-index:12}
+.saboteur.on{opacity:1;animation:sabSneak .4s ease-in-out infinite alternate;cursor:pointer;pointer-events:auto}
+@keyframes sabSneak{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(-3px)}}
+
+/* Eagle bonus */
+#eagle{position:absolute;font-size:22px;top:15%;left:-10%;z-index:8;opacity:0;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+#eagle.fly{opacity:1;pointer-events:auto;cursor:pointer;animation:eagleFly 5s linear forwards}
+@keyframes eagleFly{from{left:-10%;top:12%}to{left:110%;top:8%}}
+
+@media(min-width:500px){#scene{height:50vh}#ui{height:50vh}}
+@media(min-height:800px){#scene{height:56vh}#ui{height:44vh}}
+</style>
+</head>
+<body>
+
+<div class="lang-tg"><button class="act" onclick="setLang('ja')">JP</button><button onclick="setLang('en')">EN</button></div>
+
+<div id="timer-wrap"><div id="timer-fill"></div></div>
+
+<div id="scene">
+  <div class="moon"></div>
+  <div class="mountains"><div class="mtn mtn-1"></div><div class="mtn mtn-2"></div></div>
+  <div class="steppe"><div class="steppe-grass"></div></div>
+  <div class="wall-area"><div class="wall-path"><div class="wall-tex"></div></div><div class="wall-body"><div class="wall-tex"></div></div></div>
+  <div class="ground"></div>
+  <div id="towers"></div>
+  <div id="enemy-wave"><div class="enemy-dust"></div></div>
+  <div id="eagle">🦅</div>
+</div>
+
+<div class="hud" id="hud">
+  <span data-i18n="hudWave">第<span class="val" id="hud-wave">1</span>陣</span>
+  <span data-i18n="hudScore"><span class="val" id="hud-score">0</span> 点</span>
+</div>
+
+<div id="ui">
+  <div id="log"></div>
+  <button class="action-btn" id="act-btn" onclick="onAction()"></button>
+</div>
+
+<!-- Title overlay -->
+<div class="ov" id="ov-title">
+  <div class="badge">221 BC</div>
+  <h1 data-i18n="title">烽火リレー</h1>
+  <h2 data-i18n="subtitle">万里の長城の烽火台をリレーして<br>敵襲を知らせよ</h2>
+  <div class="fact">
+    <b data-i18n="howTitle">遊び方</b><br>
+    <span data-i18n="howText">烽火台を順番にタップして、狼煙のリレーを完成させよう。敵が長城に到達する前にすべての烽火台に火を灯せ！</span>
+  </div>
+  <button class="action-btn" style="max-width:280px" onclick="startGame()" data-i18n="startBtn">烽火を灯せ</button>
+</div>
+
+<!-- Wave result overlay -->
+<div class="ov hide" id="ov-result"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   烽火リレー 221 BC — Beacon Relay
+   ═══════════════════════════════════════════ */
+
+const I = {
+  ja: {
+    title:'烽火リレー', subtitle:'万里の長城の烽火台をリレーして<br>敵襲を知らせよ',
+    howTitle:'遊び方', howText:'烽火台を順番にタップして、狼煙のリレーを完成させよう。敵が長城に到達する前にすべての烽火台に火を灯せ！',
+    startBtn:'烽火を灯せ',
+    hudWave:'第<span class="val" id="hud-wave">{n}</span>陣',
+    hudScore:'<span class="val" id="hud-score">{n}</span> 点',
+    spotEnemy:'⚠ 敵影発見！左端の烽火台をタップ！',
+    relay:'🔥 次の烽火台をタップしてリレー！',
+    chainOk:'✅ 全烽火台に伝達完了！援軍出発！',
+    breach:'💀 敵が長城を突破した……',
+    windMsg:'💨 強風！第{n}台の火が消えた！再点火せよ！',
+    sabMsg:'🥷 間諜が烽火台に！タップして追い払え！',
+    sabCaught:'🥷 間諜を捕縛！+{n}点',
+    eagleMsg:'🦅 偵察鷹！タップでボーナス時間！',
+    eagleCaught:'🦅 鷹情報！+{n}秒',
+    waveClear:'伝達成功！',
+    waveFail:'突破された…',
+    waveTitle:'第{n}陣',
+    waveScore:'波スコア',
+    speedBonus:'速度ボーナス',
+    totalScore:'合計',
+    nextBtn:'次の陣へ',
+    retryBtn:'再挑戦',
+    victory:'全陣突破！長城は守られた！',
+    victoryDesc:'烽火リレーの成功により援軍が到着し、匈奴の侵攻を撃退しました。あなたは長城の守護者として歴史に名を刻みました。',
+    finalScore:'最終得点',
+    replayBtn:'最初から',
+    facts:[
+      {t:'烽火台とは',b:'烽火台（ほうかだい）は万里の長城に沿って設置された古代の通信システムです。夜は<b>火</b>、昼は<b>煙（狼煙）</b>で敵襲を伝えました。'},
+      {t:'始皇帝の長城',b:'秦の始皇帝は紀元前221年に中国を統一し、北方の<b>匈奴（きょうど）</b>の侵入を防ぐため、既存の城壁をつなげて万里の長城としました。'},
+      {t:'信号の約束',b:'烽火の数で敵の規模を伝えました。<b>一つ＝偵察隊</b>（数百人）、<b>二つ＝中規模軍</b>（千人超）、<b>三つ＝大軍</b>（一万人超）。'},
+      {t:'驚異の速度',b:'烽火は約<b>700km</b>の距離を数時間で伝達できました。電信が発明される<b>2000年以上前</b>の世界最速の長距離通信手段でした。'},
+      {t:'狼煙の由来',b:'各烽火台には3〜5人の兵士が常駐。<b>狼の糞</b>を燃やすと黒く濃い煙が出て視認性が高く、「狼煙（ろうえん）」の語源となりました。'},
+      {t:'歴史的意義',b:'この通信システムにより中央司令部は敵の侵入を迅速に把握し援軍を派遣できました。烽火台は軍事と<b>シルクロード交易</b>の安全を支えました。'},
+    ]
+  },
+  en: {
+    title:'Beacon Relay', subtitle:'Relay fire signals along<br>the Great Wall',
+    howTitle:'How to Play', howText:'Tap beacon towers in order to complete the fire relay chain. Light all towers before the enemy reaches the wall!',
+    startBtn:'Light the Beacon',
+    hudWave:'Wave <span class="val" id="hud-wave">{n}</span>',
+    hudScore:'<span class="val" id="hud-score">{n}</span> pts',
+    spotEnemy:'⚠ Enemy spotted! Tap the leftmost tower!',
+    relay:'🔥 Tap the next tower to relay!',
+    chainOk:'✅ All towers lit! Reinforcements dispatched!',
+    breach:'💀 The enemy breached the wall…',
+    windMsg:'💨 Strong wind! Tower {n} fire went out! Relight it!',
+    sabMsg:'🥷 Spy on the tower! Tap to drive them away!',
+    sabCaught:'🥷 Spy captured! +{n} pts',
+    eagleMsg:'🦅 Scout eagle! Tap for bonus time!',
+    eagleCaught:'🦅 Eagle intel! +{n}s',
+    waveClear:'Signal Complete!',
+    waveFail:'Wall Breached…',
+    waveTitle:'Wave {n}',
+    waveScore:'Wave Score',
+    speedBonus:'Speed Bonus',
+    totalScore:'Total',
+    nextBtn:'Next Wave',
+    retryBtn:'Retry',
+    victory:'All Waves Clear! The Wall Stands!',
+    victoryDesc:'Your beacon relay brought reinforcements that repelled the Xiongnu invasion. You are remembered as a guardian of the Great Wall.',
+    finalScore:'Final Score',
+    replayBtn:'Play Again',
+    facts:[
+      {t:'Beacon Towers',b:'Beacon towers were an ancient communication system along the Great Wall. <b>Fire by night</b> and <b>smoke by day</b> signaled enemy attacks to neighboring towers.'},
+      {t:'The First Emperor\'s Wall',b:'Qin Shi Huang unified China in 221 BC and connected existing walls into the Great Wall to defend against the <b>Xiongnu</b> nomads from the north.'},
+      {t:'Signal Code',b:'The number of fires indicated enemy scale: <b>one = scouts</b> (hundreds), <b>two = medium force</b> (1,000+), <b>three = large army</b> (10,000+).'},
+      {t:'Amazing Speed',b:'The beacon system could transmit over <b>700 km</b> in just hours — the world\'s fastest long-distance communication, <b>over 2,000 years</b> before the telegraph.'},
+      {t:'Wolf Smoke',b:'Each tower housed 3–5 soldiers. Burning <b>wolf dung</b> produced dark, highly visible smoke — the origin of the Chinese term "wolf smoke" (狼煙).'},
+      {t:'Historical Impact',b:'This system let central command quickly detect invasions and dispatch reinforcements. Beacon towers secured both military defense and <b>Silk Road</b> trade.'},
+    ]
+  }
+};
+
+const WAVES = [
+  {towers:3, time:12, speed:1.0, events:[]},
+  {towers:3, time:11, speed:1.2, events:[]},
+  {towers:4, time:11, speed:1.25, events:['wind']},
+  {towers:4, time:10, speed:1.4, events:['saboteur']},
+  {towers:5, time:10, speed:1.5, events:['wind','eagle']},
+  {towers:5, time:9,  speed:1.65, events:['wind','saboteur']},
+];
+
+let lang = 'ja';
+let phase = 'title'; // title|briefing|playing|result|victory
+let wave = 0;
+let score = 0;
+let waveScore = 0;
+let speedBonus = 0;
+let towers = [];      // {lit, blownOut, saboteur}
+let currentTap = 0;   // which tower index needs to be tapped next
+let timer = 0;        // remaining ms
+let maxTime = 0;
+let enemyY = 0;       // 0..1 (0=far, 1=at wall)
+let loopId = null;
+let lastTick = 0;
+let eventsFired = {}; // track which events fired this wave
+let waveStartTime = 0;
+
+const $ = id => document.getElementById(id);
+const scene = $('scene');
+const towersEl = $('towers');
+const enemyEl = $('enemy-wave');
+const timerFill = $('timer-fill');
+const logEl = $('log');
+const actBtn = $('act-btn');
+const hudEl = $('hud');
+const eagleEl = $('eagle');
+
+function t(key, params) {
+  let s = I[lang][key] || key;
+  if (params) Object.keys(params).forEach(k => s = s.replace('{'+k+'}', params[k]));
+  return s;
+}
+
+/* ── Stars ── */
+function makeStars() {
+  const c = document.createElement('div');
+  c.className = 'stars';
+  let shadows = [];
+  for (let i = 0; i < 80; i++) {
+    const x = Math.random()*100, y = Math.random()*50;
+    const size = Math.random() < .15 ? 2 : 1;
+    const alpha = .3 + Math.random()*.7;
+    shadows.push(`${x}vw ${y}vh 0 ${size-1}px rgba(255,255,240,${alpha})`);
+  }
+  c.style.boxShadow = shadows.join(',');
+  c.style.width = '1px'; c.style.height = '1px';
+  c.style.position = 'absolute';
+  scene.insertBefore(c, scene.firstChild);
+}
+
+/* ── Towers ── */
+function createTowers(n) {
+  towersEl.innerHTML = '';
+  towers = [];
+  const sceneW = scene.offsetWidth;
+  const wallBottom = 10; // % from bottom
+  const wallH = 10; // %
+  const spacing = sceneW / (n + 1);
+
+  for (let i = 0; i < n; i++) {
+    const tw = document.createElement('div');
+    tw.className = 'tower-wrap';
+    const x = spacing * (i + 1) - 17;
+    tw.style.left = x + 'px';
+    tw.style.bottom = (wallBottom + wallH - 1) + '%';
+    tw.dataset.idx = i;
+    tw.innerHTML = `
+      <div class="fire-glow" data-r="glow"></div>
+      <div class="fire-wrap" data-r="fire"><div class="fl fl-1"></div><div class="fl fl-2"></div><div class="fl fl-3"></div></div>
+      <div class="tw-alert" data-r="alert">❗</div>
+      <div class="tw-relay" data-r="relay">🔥</div>
+      <div class="wind-icon" data-r="wind">💨</div>
+      <div class="saboteur" data-r="sab" onclick="onSaboteurTap(event,${i})">🥷</div>
+      <div class="tw-base">
+        <div class="tw-merlons"><span></span><span></span><span></span></div>
+        <div class="tw-plat"></div>
+        <div class="tw-body"></div>
+      </div>
+      <div class="tw-num">${i+1}</div>`;
+    tw.addEventListener('pointerdown', e => onTowerTap(i, e));
+    towersEl.appendChild(tw);
+    towers.push({lit:false, blownOut:false, saboteur:false, el:tw});
+  }
+}
+
+function getTwPart(i, r) { return towers[i].el.querySelector(`[data-r="${r}"]`); }
+
+/* ── Enemy figures ── */
+function createEnemyFigures(waveIdx) {
+  const ew = enemyEl;
+  ew.querySelectorAll('.ef').forEach(e => e.remove());
+  const count = 6 + waveIdx * 2;
+  const hasCav = waveIdx >= 1;
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement('div');
+    f.className = 'ef' + (hasCav && Math.random() < .3 ? ' horse' : '');
+    ew.appendChild(f);
+  }
+}
+
+/* ── Log ── */
+function log(msg, cls) {
+  const p = document.createElement('div');
+  if (cls) p.className = cls;
+  p.innerHTML = msg;
+  logEl.appendChild(p);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ── Game start ── */
+function startGame() {
+  wave = 0; score = 0;
+  $('ov-title').classList.add('hide');
+  hudEl.classList.add('on');
+  startWave();
+}
+
+function startWave() {
+  phase = 'playing';
+  const cfg = WAVES[wave];
+  createTowers(cfg.towers);
+  createEnemyFigures(wave);
+  currentTap = 0;
+  waveScore = 0;
+  speedBonus = 0;
+  maxTime = cfg.time * 1000;
+  timer = maxTime;
+  enemyY = 0;
+  eventsFired = {};
+  logEl.innerHTML = '';
+
+  $('hud-wave').textContent = wave + 1;
+  $('hud-score').textContent = score;
+  timerFill.style.width = '100%';
+  timerFill.style.background = 'linear-gradient(90deg,#33cc33,#88ee44)';
+  enemyEl.style.top = '0%';
+  enemyEl.classList.add('on');
+  enemyEl.style.background = 'linear-gradient(180deg,rgba(60,20,15,.7),rgba(40,12,10,.35))';
+
+  towers[0].el.querySelector('[data-r="alert"]').classList.add('on');
+  log(t('spotEnemy'), 'hi');
+
+  waveStartTime = performance.now();
+  lastTick = waveStartTime;
+  if (loopId) clearInterval(loopId);
+  loopId = setInterval(gameLoop, 50);
+}
+
+/* ── Game loop ── */
+function gameLoop() {
+  const now = performance.now();
+  const dt = now - lastTick;
+  lastTick = now;
+
+  if (phase !== 'playing') return;
+
+  const cfg = WAVES[wave];
+  timer -= dt;
+  enemyY = 1 - (timer / maxTime);
+
+  // Timer bar
+  const pct = Math.max(0, timer / maxTime) * 100;
+  timerFill.style.width = pct + '%';
+  if (pct < 25) timerFill.style.background = 'linear-gradient(90deg,#ff3333,#ff6633)';
+  else if (pct < 50) timerFill.style.background = 'linear-gradient(90deg,#ff8833,#ffcc33)';
+
+  // Enemy position: start far (top of steppe) → approach wall
+  const farTop = 10;   // far away (upper steppe)
+  const wallTop = 62;  // at the wall line
+  const enemyTop = farTop + enemyY * (wallTop - farTop);
+  enemyEl.style.top = enemyTop + '%';
+
+  // Trigger events at certain progress points
+  triggerScheduledEvents();
+
+  // Time up → breach
+  if (timer <= 0) {
+    phase = 'result';
+    clearInterval(loopId);
+    enemyEl.classList.remove('on');
+    waveFail();
+  }
+}
+
+/* ── Scheduled events ── */
+function triggerScheduledEvents() {
+  const cfg = WAVES[wave];
+  const progress = enemyY;
+
+  if (cfg.events.includes('wind') && !eventsFired.wind && progress > 0.3 && currentTap > 0 && currentTap < towers.length) {
+    eventsFired.wind = true;
+    triggerWind();
+  }
+  if (cfg.events.includes('saboteur') && !eventsFired.sab && progress > 0.4 && currentTap > 0 && currentTap < towers.length) {
+    eventsFired.sab = true;
+    triggerSaboteur();
+  }
+  if (cfg.events.includes('eagle') && !eventsFired.eagle && progress > 0.2) {
+    eventsFired.eagle = true;
+    triggerEagle();
+  }
+}
+
+/* ── Wind event ── */
+function triggerWind() {
+  const litTowers = towers.map((t,i) => t.lit && i < currentTap ? i : -1).filter(i => i >= 0);
+  if (litTowers.length === 0) return;
+  const target = litTowers[Math.floor(Math.random() * litTowers.length)];
+  towers[target].lit = false;
+  towers[target].blownOut = true;
+  getTwPart(target, 'fire').classList.remove('lit');
+  getTwPart(target, 'glow').classList.remove('lit');
+  getTwPart(target, 'wind').classList.add('on');
+  log(t('windMsg', {n: target+1}), 'danger');
+
+  const oldTap = currentTap;
+  currentTap = target;
+  if (oldTap < towers.length) {
+    getTwPart(oldTap, 'relay').classList.remove('on');
+    getTwPart(oldTap, 'alert').classList.remove('on');
+  }
+  getTwPart(target, 'alert').classList.add('on');
+}
+
+/* ── Saboteur event ── */
+function triggerSaboteur() {
+  const unlit = towers.map((t,i) => !t.lit && i >= currentTap ? i : -1).filter(i => i >= 0);
+  if (unlit.length === 0) return;
+  const target = unlit[0];
+  towers[target].saboteur = true;
+  getTwPart(target, 'sab').classList.add('on');
+  log(t('sabMsg'), 'danger');
+}
+
+function onSaboteurTap(e, idx) {
+  e.stopPropagation();
+  if (!towers[idx].saboteur) return;
+  towers[idx].saboteur = false;
+  getTwPart(idx, 'sab').classList.remove('on');
+  const pts = 150;
+  waveScore += pts;
+  log(t('sabCaught', {n: pts}), 'ok');
+  addRipple(e);
+}
+
+/* ── Eagle event ── */
+function triggerEagle() {
+  eagleEl.classList.add('fly');
+  eagleEl.style.pointerEvents = 'auto';
+  log(t('eagleMsg'), 'hi');
+  const handler = (e) => {
+    eagleEl.removeEventListener('pointerdown', handler);
+    eagleEl.classList.remove('fly');
+    eagleEl.style.pointerEvents = 'none';
+    const bonus = 2000;
+    timer = Math.min(maxTime, timer + bonus);
+    log(t('eagleCaught', {n: (bonus/1000)}), 'ok');
+    waveScore += 100;
+  };
+  eagleEl.addEventListener('pointerdown', handler);
+  setTimeout(() => {
+    eagleEl.classList.remove('fly');
+    eagleEl.style.pointerEvents = 'none';
+  }, 5000);
+}
+
+/* ── Tower tap ── */
+function onTowerTap(idx, e) {
+  if (phase !== 'playing') return;
+  if (towers[idx].saboteur) return; // handled by saboteur handler
+
+  addRipple(e);
+
+  // Blown-out tower relight
+  if (towers[idx].blownOut && idx === currentTap) {
+    towers[idx].blownOut = false;
+    towers[idx].lit = true;
+    getTwPart(idx, 'wind').classList.remove('on');
+    getTwPart(idx, 'alert').classList.remove('on');
+    getTwPart(idx, 'fire').classList.add('lit');
+    getTwPart(idx, 'glow').classList.add('lit');
+    waveScore += 100;
+    currentTap = idx + 1;
+    advanceRelay();
+    return;
+  }
+
+  if (idx !== currentTap) return;
+  if (towers[idx].lit) return;
+  if (towers[idx].saboteur) return;
+
+  // Light the tower
+  towers[idx].lit = true;
+  getTwPart(idx, 'alert').classList.remove('on');
+  getTwPart(idx, 'relay').classList.remove('on');
+  getTwPart(idx, 'fire').classList.add('lit');
+  getTwPart(idx, 'glow').classList.add('lit');
+
+  const elapsed = performance.now() - waveStartTime;
+  const speedPts = Math.max(0, Math.round(50 * (timer / maxTime)));
+  waveScore += 100 + speedPts;
+  speedBonus += speedPts;
+  currentTap = idx + 1;
+  advanceRelay();
+}
+
+function advanceRelay() {
+  if (currentTap >= towers.length) {
+    // Chain complete!
+    phase = 'result';
+    clearInterval(loopId);
+    log(t('chainOk'), 'ok');
+    document.body.insertAdjacentHTML('beforeend', '<div class="s-flash"></div>');
+    setTimeout(() => document.querySelector('.s-flash')?.remove(), 400);
+    setTimeout(waveComplete, 800);
+  } else {
+    getTwPart(currentTap, 'relay').classList.add('on');
+    log(t('relay'), 'hi');
+  }
+}
+
+/* ── Wave complete ── */
+function waveComplete() {
+  enemyEl.classList.remove('on');
+  score += waveScore;
+  $('hud-score').textContent = score;
+
+  if (wave >= WAVES.length - 1) {
+    showVictory();
+    return;
+  }
+
+  const fact = I[lang].facts[wave] || I[lang].facts[0];
+  const ov = $('ov-result');
+  ov.innerHTML = `
+    <div class="badge">${t('waveClear')}</div>
+    <h1>${t('waveTitle',{n: wave+1})}</h1>
+    <div style="margin:8px 0;font-size:14px;color:#8a9aaa">
+      ${t('waveScore')}: <b style="color:#ffcc44">${waveScore - speedBonus}</b>
+      ${t('speedBonus')}: <b style="color:#55cc66">+${speedBonus}</b>
+    </div>
+    <div class="big-score">${score}</div>
+    <div class="fact"><b>${fact.t}</b><br>${fact.b}</div>
+    <button class="action-btn" style="max-width:280px" onclick="nextWave()">${t('nextBtn')}</button>`;
+  ov.classList.remove('hide');
+}
+
+function nextWave() {
+  $('ov-result').classList.add('hide');
+  wave++;
+  startWave();
+}
+
+/* ── Wave fail ── */
+function waveFail() {
+  enemyEl.classList.remove('on');
+  document.body.insertAdjacentHTML('beforeend', '<div class="f-flash"></div>');
+  setTimeout(() => document.querySelector('.f-flash')?.remove(), 400);
+  log(t('breach'), 'danger');
+
+  const fact = I[lang].facts[wave] || I[lang].facts[0];
+  const ov = $('ov-result');
+  ov.innerHTML = `
+    <div class="badge" style="background:#cc2200">${t('waveFail')}</div>
+    <h1 style="background:linear-gradient(135deg,#ff4433,#cc2200);-webkit-background-clip:text;background-clip:text">${t('waveFail')}</h1>
+    <div style="margin:12px 0;font-size:14px;color:#8a9aaa">
+      ${t('totalScore')}: <b style="color:#ffcc44">${score}</b>
+    </div>
+    <div class="fact"><b>${fact.t}</b><br>${fact.b}</div>
+    <button class="action-btn" style="max-width:280px" onclick="retryWave()">${t('retryBtn')}</button>`;
+  ov.classList.remove('hide');
+}
+
+function retryWave() {
+  $('ov-result').classList.add('hide');
+  startWave();
+}
+
+/* ── Victory ── */
+function showVictory() {
+  phase = 'victory';
+  const ov = $('ov-result');
+  const fact = I[lang].facts[5] || I[lang].facts[0];
+  ov.innerHTML = `
+    <div class="badge">221 BC</div>
+    <h1>${t('victory')}</h1>
+    <h2>${t('victoryDesc')}</h2>
+    <div style="font-size:12px;color:#6a7a8a;margin-bottom:4px">${t('finalScore')}</div>
+    <div class="big-score">${score}</div>
+    <div class="fact"><b>${fact.t}</b><br>${fact.b}</div>
+    <button class="action-btn" style="max-width:280px" onclick="replay()">${t('replayBtn')}</button>`;
+  ov.classList.remove('hide');
+}
+
+function replay() {
+  $('ov-result').classList.add('hide');
+  wave = 0; score = 0;
+  $('hud-score').textContent = 0;
+  startWave();
+}
+
+/* ── Ripple effect ── */
+function addRipple(e) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  const rect = scene.getBoundingClientRect();
+  const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+  const y = (e.clientY || e.touches?.[0]?.clientY || 0) - rect.top;
+  r.style.left = x + 'px'; r.style.top = y + 'px';
+  scene.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+}
+
+/* ── Language ── */
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-tg button').forEach(b => b.classList.toggle('act', b.textContent === (l==='ja'?'JP':'EN')));
+  applyI18n();
+}
+
+function applyI18n() {
+  const map = {
+    title: I[lang].title,
+    subtitle: I[lang].subtitle,
+    howTitle: I[lang].howTitle,
+    howText: I[lang].howText,
+    startBtn: I[lang].startBtn,
+  };
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (map[key]) el.innerHTML = map[key];
+  });
+}
+
+/* ── Unused action button (kept for potential future use) ── */
+function onAction() {}
+
+/* ── Init ── */
+function init() {
+  makeStars();
+  actBtn.style.display = 'none';
+  applyI18n();
+  // Pre-create 3 towers for title screen decoration
+  createTowers(3);
+  towers.forEach((tw, i) => {
+    setTimeout(() => {
+      getTwPart(i, 'fire').classList.add('lit');
+      getTwPart(i, 'glow').classList.add('lit');
+    }, 400 * i + 300);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+window.addEventListener('resize', () => {
+  if (phase === 'playing') createTowers(WAVES[wave].towers);
+});
+</script>
+</body>
+</html>
